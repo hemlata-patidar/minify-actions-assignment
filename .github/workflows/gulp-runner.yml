@@ -4,7 +4,7 @@ name: Run gulp tasks
 on:
   push:
     # On which branch
-    branches: ["main"]
+    branches: ["gulp-minify"]
     # On which files
     paths: ["js/scripts.js", "css/styles.css"]
 
