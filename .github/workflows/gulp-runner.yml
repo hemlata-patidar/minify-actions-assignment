@@ -31,7 +31,7 @@ jobs:
           git add -A
           git commit -m "Update gulp output files"
       - name: Push changes
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@gulp-minify
         with:
           github_token: ${{ secrets.REPO_GITHUB_TOKEN }}
           # force: true
