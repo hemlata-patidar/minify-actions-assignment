@@ -1,61 +1,54 @@
-var gulp = require('gulp');
-var sass = require('gulp-sass');
-var minifyCss = require('gulp-minify-css');
-var rename = require('gulp-rename');
-var runSequence = require('run-sequence');
-var injectPartials = require('gulp-inject-partials');
-var autoprefixer = require('gulp-autoprefixer');
-var csso = require('gulp-csso');
-var uglify = require('gulp-uglify');
-var concat = require('gulp-concat');
+var gulp = require("gulp");
+var plumber = require("gulp-plumber");
+var uglify = require("gulp-uglify");
+var sass = require("gulp-sass")(require("sass"));
+var wait = require("gulp-wait");
+var rename = require("gulp-rename");
+var autoprefixer = require("gulp-autoprefixer");
+// var imagemin = require('gulp-imagemin');
+const { series } = require("gulp");
 
-var thirdpartyJs = ['js/jquery.min.js'];
-// Set the browser that you want to support
-const AUTOPREFIXER_BROWSERS = [
-    'ie >= 10',
-    'ie_mob >= 10',
-    'ff >= 30',
-    'chrome >= 34',
-    'safari >= 7',
-    'opera >= 23',
-    'ios >= 7',
-    'android >= 4.4',
-    'bb >= 10'
-  ];
-
-gulp.task('js', function () {
-    return gulp.src([
-        'js/*.js',
-        '!js/*.min.js',
-       ])
-      .pipe(uglify())
-      .pipe(rename(function(path) {
-        path.extname = ".min.js";
-      }))
-      .pipe(gulp.dest('js/'));
-  });
-
-  gulp.task('css', function () {
-    return gulp.src([
-        'css/*.css',
-        '!css/*.min.css',
-       ])
-      .pipe(csso())
-      .pipe(rename(function(path) {
-        path.extname = ".min.css";
-      }))
-      .pipe(gulp.dest('css/'));
-  });
-
-  gulp.task('js-thirdparty-min', function() {
-    return gulp.src(thirdpartyJs)
-        .pipe(concat('fs.thirdparty.min.js'))
-        .pipe(uglify({mangle:false}))
-        .pipe(gulp.dest('js/'));
-  });
-
-gulp.task('scss', function(done) {
-    runSequence( "css", "js", 'js-thirdparty-min', done);
+gulp.task("scripts", function () {
+    return gulp
+        .src("js/scripts.js")
+        .pipe(
+            plumber(
+                plumber({
+                    errorHandler: function (err) {
+                        console.log(err);
+                        this.emit("end");
+                    },
+                })
+            )
+        )
+        .pipe(uglify({ output: { comments: "/^!/" } }))
+        .pipe(rename({ extname: ".min.js" }))
+        .pipe(gulp.dest("js"));
 });
 
-gulp.task('default', ['scss']);
+gulp.task("styles", function () {
+    return gulp
+        .src("css/styles.css")
+        .pipe(wait(250))
+        .pipe(
+            sass({
+                outputStyle: "compressed",
+            }).on("error", sass.logError)
+        )
+        .pipe(rename({ extname: ".css" }))
+        .pipe(gulp.dest("css"));
+});
+
+// Optimize Images
+// gulp.task('images', () =>
+//     gulp.src('images/*')
+//     .pipe(imagemin())
+//     .pipe(gulp.dest('min'))
+// );
+
+gulp.task("watch", function () {
+    gulp.watch("js/scripts.js", gulp.series("scripts"));
+    gulp.watch("css/styles.css", gulp.series("styles"));
+});
+
+exports.default = series("styles", "scripts");
